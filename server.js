@@ -10,7 +10,9 @@ const userRoute = require("./routes/userRoute.js")
 const app = express();
 
 app.use(express.json())
-app.use(cors("*"))
+app.use(cors({
+    "origin" : "https://real-estate-front-end-orpin.vercel.app"
+}))
 
 const port = process.env.PORT || 4600;
 
