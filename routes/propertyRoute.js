@@ -6,7 +6,7 @@ const auth = require("../middleware/authMiddleware")
 
 router.post("/create",auth,createProperty)
 router.get("/getAll",auth,getAllProperty)
-router.get("/:id",auth,findSingleProperty)
+router.get("/:keyword",auth,findSingleProperty)
 router.put("/:id",auth,editProperty)
 router.delete("/:id",auth,deleteProperty)
 

@@ -56,20 +56,26 @@ const getAllProperty = async(req,res)=>{
 
 const findSingleProperty = async(req,res)=>{
 
-    try{
-    
-    const {id} = req.params;
-    
-    const getSingle = await propertyModel.findById(id) 
-
-    if(getSingle){
-        res.status(200).send(getSingle)
-    }else{
-        res.send({message : "There is No property"})
-    }
-    }catch(err){
-        res.status(500).send({message : err.message})
-    }
+    try {
+        const { keyword } = req.params;
+       
+        const resutls = await propertyModel
+          .find({
+            $or: [
+              { propertyType: { $regex: keyword, $options: "i" } },
+              { description: { $regex: keyword, $options: "i" } },
+            ],
+          })
+         
+        res.status(200).send(resutls);
+      } catch (error) {
+       
+        res.status(400).send({
+          success: false,
+          message: "Error In Search Product API",
+          error,
+        });
+      }
 }
 
 
