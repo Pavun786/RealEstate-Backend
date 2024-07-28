@@ -5,7 +5,7 @@ const createProperty = async(req,res)=>{
 
     try{
 
-     const {propertyType,location,price,description} = req.body;
+     const {propertyType,location,price,description,userId} = req.body;
 
     
       const verifyProperty = await propertyModel.findOne({propertyType})
@@ -20,8 +20,8 @@ const createProperty = async(req,res)=>{
             propertyType : propertyType,
             location : location,
             price : price,
-            description : description
-         
+            description : description,
+            createdBy : userId
         })
           console.log("exe2"),
           await createOne.save();
@@ -36,10 +36,11 @@ const createProperty = async(req,res)=>{
       }    
 }
 
-const getAllProperty = async(req,res)=>{
-
+const getAllPropertyOfUser = async(req,res)=>{
+    
    try{
-    const allItems = await propertyModel.find({})
+    const {userId} = req.params;
+    const allItems = await propertyModel.find({createdBy : userId})
     
     if(allItems){
         res.status(200).send(allItems)
@@ -55,9 +56,10 @@ const getAllProperty = async(req,res)=>{
 }
 
 const SearchProperty = async(req,res)=>{
-
+   
+    
     try {
-        const { keyword } = req.params;
+        const { keyword,userId } = req.params;
        
         const resutls = await propertyModel
           .find({
@@ -65,6 +67,7 @@ const SearchProperty = async(req,res)=>{
               { propertyType: { $regex: keyword, $options: "i" } },
               { description: { $regex: keyword, $options: "i" } },
             ],
+            createdBy : userId
           })
          
         res.status(200).send(resutls);
@@ -79,6 +82,7 @@ const SearchProperty = async(req,res)=>{
 }
 
 const findSingleProperty = async(req,res)=>{
+  
 
     try{
     
@@ -86,6 +90,7 @@ const findSingleProperty = async(req,res)=>{
     
     const getSingle = await propertyModel.findById(id) 
 
+     
     if(getSingle){
         res.status(200).send(getSingle)
     }else{
@@ -102,13 +107,83 @@ const editProperty = async(req,res)=>{
     try{
         const {id} = req.params;
         const data = req.body;
-      console.log(data)
+    
         const updateItem = await propertyModel.findByIdAndUpdate(id,data,{ new: true })
         res.status(200).send({message : "Property Updated",updateItem})
     }catch(err){
         res.status(500).send({message: err.message})
     }
 }
+
+const propertyFilter = async (req,res) =>{
+
+    try{
+     
+       const { checked,radio,userId} = req.body;
+     
+       let args ={};
+
+
+       if(checked.length > 0){
+        args.location =  { $in: checked };
+       }
+       
+
+       if(radio && radio.toString()) {
+        let str = radio.split(",").map((ele)=> +ele)
+        console.log(str)
+        args.price = {$gte:str[0],$lte:str[1]}
+       }
+        
+        
+      if(checked.length == 1 && checked.includes("Others")){
+       
+        let values = ["Chennai","Coimbathore","Chengalpattu"]
+        const property = await propertyModel.find(
+            {createdBy:userId,
+             location:{$nin: values},
+             ...args.price && { price: args.price }
+            });
+        res.status(200).send({success: true,property});
+        
+      }
+      else if(checked.length > 0 && !checked.includes("Others")){
+       
+        const property = await propertyModel.find({createdBy:userId,location:{$in: checked},...args.price && { price: args.price }});
+        res.status(200).send({success: true,property});
+      }
+      else if(checked.length == 0){
+        
+        const property = await propertyModel.find({createdBy:userId,...args.price && { price: args.price }});
+        res.status(200).send({success: true,property}); 
+
+      }
+       else{
+       
+        let values = ["Chennai","Coimbathore","Chengalpattu"]
+        let arr = checked;
+        let temp=[]
+        for(let i=0;i<values.length;i++){
+           if(!arr.includes(values[i])){
+             temp.push(values[i])
+           }
+        }
+       const property = await propertyModel.find({createdBy:userId,location:{$nin: temp},...args.price && { price: args.price }});
+        res.status(200).send({success: true,property});
+       
+      }
+       
+    }catch(error){
+      
+      console.log(error);
+      res.status(400).send({
+  
+        success: false,
+        message:"Error while filter the products",
+        error
+      })
+  }
+  }
 
 const deleteProperty = async(req,res)=>{
 
@@ -130,4 +205,4 @@ const deleteProperty = async(req,res)=>{
 
 }
 
-module.exports = {createProperty,getAllProperty,SearchProperty,findSingleProperty,editProperty,deleteProperty};
+module.exports = {createProperty,getAllPropertyOfUser,SearchProperty,findSingleProperty,propertyFilter,editProperty,deleteProperty};

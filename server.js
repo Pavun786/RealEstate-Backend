@@ -11,7 +11,7 @@ const app = express();
 
 app.use(express.json())
 app.use(cors({
-    "origin" : "https://real-estate-front-end-orpin.vercel.app"
+    "origin" : "https://real-estate-backend-pink.vercel.app"
 }))
 
 const port = process.env.PORT || 4600;
